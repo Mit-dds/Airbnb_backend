@@ -49,43 +49,54 @@ app.post("/register", async (req, res) => {
 });
 
 app.post("/login", async (req, res) => {
-    const {email, password} = req.body;
-    const userData = await User.findOne({email});
-
-    if(userData){
-        const passOk = bcrypt.compareSync(password, userData.password);
-        if(passOk){
-            jwt.sign({email:userData.email, id:userData._id, name:userData.name}, jwtSecret, {}, (err, token) => {
-              if(err) throw err;
-              res.cookie('token', token).json(userData);
-            })
-        }else{
-            res.status(422).json("pass not ok");
-        }
-    }else{
-        res.json('not found');
+  const { email, password } = req.body;
+  const userData = await User.findOne({ email });
+  // console.log(userData + "userData called");
+  if (userData) {
+    const passOk = bcrypt.compare(password, userData.password);
+    if (passOk) {
+      jwt.sign(
+        { email: userData.email, id: userData._id, name: userData.name },
+        jwtSecret,
+        {},
+        (err, token) => {
+          if (err) throw err;
+          res.cookie("token", token).json(userData);
+        },
+      );
+    } else {
+      res.status(422).json("pass not ok");
     }
-})
+  } else {
+    res.json("not found");
+  }
+});
 
-app.get('/profile',  (req, res) => {
-  // console.log("profile");
-  const {token} = req.cookies;
-  // console.log(token);
-  if(token){
-    jwt.verify(token, jwtSecret, {}, (err, user) => {
-      if(err) throw err;
-      // console.log(user);
-      res.json(user);
-    }); 
+app.get("/profile", (req, res) => {
+  const { token } = req.cookies;
+
+  if (!token) {
+    return res.json(null);
+  }
+
+  if (token) {
+    jwt.verify(token, jwtSecret, {}, async (err, user) => {
+      if (err) throw err;
+      const {name, email, _id} = await User.findById(user.id);
+      res.json({name, email, _id});
+    });
     // const decoded = jwt.verify(token, jwtSecret);
     // const user = await User.findById(decoded.id);
-    // console.log(user);
-
   } else {
     res.json(null);
   }
-})
-console.log("hey")
+
+  // jwt.verify(token, jwtSecret, {}, (err, user) => {
+  //   if (err) return res.json(null);
+  //   res.json(user);
+  // });
+});
+console.log("hey");
 
 const PORT = process.env.PORT || 4000;
 
