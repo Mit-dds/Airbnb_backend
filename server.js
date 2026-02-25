@@ -53,6 +53,7 @@ app.post("/login", async (req, res) => {
   const userData = await User.findOne({ email });
   // console.log(userData + "userData called");
   if (userData) {
+    // const passOk = await bcrypt.compare(password, userData.password);
     const passOk = bcrypt.compare(password, userData.password);
     if (passOk) {
       jwt.sign(
@@ -82,8 +83,8 @@ app.get("/profile", (req, res) => {
   if (token) {
     jwt.verify(token, jwtSecret, {}, async (err, user) => {
       if (err) throw err;
-      const {name, email, _id} = await User.findById(user.id);
-      res.json({name, email, _id});
+      const { name, email, _id } = await User.findById(user.id);
+      res.json({ name, email, _id });
     });
     // const decoded = jwt.verify(token, jwtSecret);
     // const user = await User.findById(decoded.id);
@@ -96,7 +97,10 @@ app.get("/profile", (req, res) => {
   //   res.json(user);
   // });
 });
-console.log("hey");
+
+app.post("/logout", (req, res) => {
+  res.cookie('token', '').json(true);
+});
 
 const PORT = process.env.PORT || 4000;
 
